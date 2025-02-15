@@ -22,3 +22,55 @@
    - **Смерть**:
      - Если у живой клетки **меньше 2 живых соседей** (одиночество).
      - Если у живой клетки **больше 3 живых соседей** (перенаселение).
+
+## Интересный факт 
+Клеточный автомат Конвея является Тьюринг-полным. Это означает, что с помощью этого клеточного автомата можно моделировать любое вычисление, которое можно выполнить с помощью Тьюринговой машины, при наличии достаточного количества ресурсов (в частности, клеток и времени).
+
+Основная идея состоит в том, что с помощью достаточно сложных конструкций из клеток можно создавать структуры, которые ведут себя как "память" или "процессор", что позволяет моделировать любые алгоритмы.
+
+## Ключевые моменты реализации
+Для GUI используется библиотека для .NET: https://github.com/GtkSharp/GtkSharp
+
+### Изменение состояния клетки
+```fsharp
+let neighbors (x, y) =
+    [ -1 .. 1 ]
+    |> List.collect (fun dx ->
+        [ -1 .. 1 ]
+        |> List.choose (fun dy ->
+            match dx <> 0 || dy <> 0 with
+            | true -> Some(x + dx, y + dy)
+            |_ -> None
+        ))
+```
+
+### Обновление поля
+```fsharp
+let nextGeneration (board: Set<Cell>) : Set<Cell> =
+    let aliveNeighbors cell =
+        neighbors cell |> List.filter (fun n -> board.Contains n) |> List.length
+
+    let candidates =
+        board
+        |> Set.fold (fun acc cell -> Set.union acc (neighbors cell |> Set.ofList)) board
+
+    candidates
+    |> Set.filter (fun cell ->
+        match board.Contains cell with
+        | true ->
+            let n = aliveNeighbors cell
+            n = 2 || n = 3
+        |_ -> aliveNeighbors cell = 3
+    )
+```
+
+### Парсинг состояния
+```fsharp
+let parseInitialBoard (filePath: string) : Set<Cell> =
+    File.ReadAllLines filePath
+    |> Array.choose (fun line ->
+        match line.Split ',' with
+        | [| x; y |] -> Some(int x, int y)
+        | _ -> None)
+    |> Set.ofArray
+```

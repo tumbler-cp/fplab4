@@ -12,8 +12,7 @@ let neighbors (x, y) =
         |> List.choose (fun dy ->
             match dx <> 0 || dy <> 0 with
             | true -> Some(x + dx, y + dy)
-            |_ -> None
-        ))
+            | _ -> None))
 
 let nextGeneration (board: Set<Cell>) : Set<Cell> =
     let aliveNeighbors cell =
@@ -29,8 +28,7 @@ let nextGeneration (board: Set<Cell>) : Set<Cell> =
         | true ->
             let n = aliveNeighbors cell
             n = 2 || n = 3
-        |_ -> aliveNeighbors cell = 3
-    )
+        | _ -> aliveNeighbors cell = 3)
 
 let cellSize = 16
 
@@ -118,8 +116,7 @@ let main argv =
     window.KeyPressEvent.Add(fun args ->
         match args.Event.Key with
         | Gdk.Key.space -> boardAgent.Post ToggleRunning
-        |_ -> ()
-    )
+        | _ -> ())
 
     window.ShowAll()
     Application.Run()

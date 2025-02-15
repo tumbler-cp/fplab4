@@ -6,10 +6,14 @@ open System.IO
 type Cell = int * int
 
 let neighbors (x, y) =
-    [ for dx in -1 .. 1 do
-          for dy in -1 .. 1 do
-              if dx <> 0 || dy <> 0 then
-                  yield x + dx, y + dy ]
+    [ -1 .. 1 ]
+    |> List.collect (fun dx ->
+        [ -1 .. 1 ]
+        |> List.choose (fun dy ->
+            match dx <> 0 || dy <> 0 with
+            | true -> Some(x + dx, y + dy)
+            |_ -> None
+        ))
 
 let nextGeneration (board: Set<Cell>) : Set<Cell> =
     let aliveNeighbors cell =
@@ -21,11 +25,12 @@ let nextGeneration (board: Set<Cell>) : Set<Cell> =
 
     candidates
     |> Set.filter (fun cell ->
-        if board.Contains cell then
+        match board.Contains cell with
+        | true ->
             let n = aliveNeighbors cell
             n = 2 || n = 3
-        else
-            aliveNeighbors cell = 3)
+        |_ -> aliveNeighbors cell = 3
+    )
 
 let cellSize = 16
 
@@ -35,9 +40,9 @@ type Msg =
     | ToggleRunning
 
 let parseInitialBoard (filePath: string) : Set<Cell> =
-    File.ReadAllLines(filePath)
+    File.ReadAllLines filePath
     |> Array.choose (fun line ->
-        match line.Split(',') with
+        match line.Split ',' with
         | [| x; y |] -> Some(int x, int y)
         | _ -> None)
     |> Set.ofArray
@@ -111,10 +116,10 @@ let main argv =
         )
 
     window.KeyPressEvent.Add(fun args ->
-        if args.Event.Key = Gdk.Key.space then
-            boardAgent.Post ToggleRunning
-
-        ())
+        match args.Event.Key with
+        | Gdk.Key.space -> boardAgent.Post ToggleRunning
+        |_ -> ()
+    )
 
     window.ShowAll()
     Application.Run()
